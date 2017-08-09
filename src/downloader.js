@@ -35,7 +35,7 @@ function createEvent(name, data) {
   if (data[0]) log += " : " + data[0];
   //console.log("FIRE "+ log);
   return event;
-};
+}
 
 var Downloader = {
   /** @type {cordova-plugin-file.FileEntry} */
@@ -82,22 +82,22 @@ var Downloader = {
   initialize: function(options) {
     //console.log("initialize");
     Downloader.setFolder(options.folder);
-    if (typeof options.unzip != 'undefined') {
+    if (typeof options.unzip != "undefined") {
       Downloader.setAutoUnzip(options.unzip);
     }
-    if (typeof options.remove != 'undefined') {
+    if (typeof options.remove != "undefined") {
       Downloader.setRemoveAfterUnzip(options.remove);
     }
-    if (typeof options.check != 'undefined') {
+    if (typeof options.check != "undefined") {
       Downloader.setAutoCheck(options.check);
     }
-    if (typeof options.wifiOnly != 'undefined') {
+    if (typeof options.wifiOnly != "undefined") {
       Downloader.setWifiOnly(options.wifiOnly);
     }
-    if (typeof options.noMedia != 'undefined') {
+    if (typeof options.noMedia != "undefined") {
       Downloader.setNoMedia(options.noMedia);
     }
-    if (typeof options.fileSystem != 'undefined') {
+    if (typeof options.fileSystem != "undefined") {
       Downloader.fileSystemURL = options.fileSystem;
     }
 
@@ -123,11 +123,15 @@ var Downloader = {
     md5 = md5 || null;
     if (!Downloader.isInitialized()) {
       //console.log("wait for initialization");
-      document.addEventListener("DOWNLOADER_initialized", function onInitialized(event) {
-        //console.log("initialization done");
-        event.target.removeEventListener("DOWNLOADER_initialized", onInitialized, false);
-        Downloader.load(url, md5);
-      }, false);
+      document.addEventListener(
+        "DOWNLOADER_initialized",
+        function onInitialized(event) {
+          //console.log("initialization done");
+          event.target.removeEventListener("DOWNLOADER_initialized", onInitialized, false);
+          Downloader.load(url, md5);
+        },
+        false
+      );
       return;
     }
     var fileObject = {
@@ -204,16 +208,23 @@ var Downloader = {
     Downloader.transfer.onprogress = function(progressEvent) {
       if (progressEvent.lengthComputable) {
         var percentage = Math.floor(progressEvent.loaded / progressEvent.total * 100);
-        document.dispatchEvent(createEvent("DOWNLOADER_downloadProgress", [percentage, fileObject.name]));
+        document.dispatchEvent(
+          createEvent("DOWNLOADER_downloadProgress", [percentage, fileObject.name])
+        );
       }
     };
-    Downloader.transfer.download(fileObject.url, filePath, function(entry) {
-      // console.log("transferFile, succcess file name: " + Downloader.fileObjectInProgress.name);
-      document.dispatchEvent(createEvent("DOWNLOADER_downloadSuccess", [entry]));
-    }, function(error) {
-      // console.log("transferFile, error file name: " + Downloader.fileObjectInProgress.name);
-      document.dispatchEvent(createEvent("DOWNLOADER_downloadError", [error]));
-    });
+    Downloader.transfer.download(
+      fileObject.url,
+      filePath,
+      function(entry) {
+        // console.log("transferFile, succcess file name: " + Downloader.fileObjectInProgress.name);
+        document.dispatchEvent(createEvent("DOWNLOADER_downloadSuccess", [entry]));
+      },
+      function(error) {
+        // console.log("transferFile, error file name: " + Downloader.fileObjectInProgress.name);
+        document.dispatchEvent(createEvent("DOWNLOADER_downloadError", [error]));
+      }
+    );
   },
 
   /**
@@ -223,42 +234,21 @@ var Downloader = {
   //TODO: full fileEntry as param? not only fileName
   _unzip: function(fileName) {
     var folderUrl = Downloader.localFolder.toURL();
-    zip.unzip(folderUrl + "/" + fileName, folderUrl, function(code) {
-      if (code == 0) {
-        document.dispatchEvent(createEvent("DOWNLOADER_unzipSuccess", [fileName]));
-      } else {
-        document.dispatchEvent(createEvent("DOWNLOADER_unzipError", [fileName]));
-      }
-    }, function(progressEvent) {
-      var percentage = Math.floor(progressEvent.loaded / progressEvent.total * 100);
-      document.dispatchEvent(createEvent("DOWNLOADER_unzipProgress", [percentage, fileName]));
-    });
-  },
-
-  /**
-   * compare md5sum of fileName with md5
-   * @param {String} fileName
-   * @param {String} md5
-   */
-  check: function(fileName, md5) {
-    var folder = Downloader.localFolder;
-    folder.getFile(fileName, {
-      create: false,
-      exclusive: false
-    }, function onGotFileToCheck(entry) {
-      md5chksum.file(entry, function(md5sum) {
-        //console.log(md5sum + " == " + md5);
-        if (md5sum == md5) {
-          document.dispatchEvent(createEvent("DOWNLOADER_fileCheckSuccess", [md5sum, fileName]));
+    zip.unzip(
+      folderUrl + "/" + fileName,
+      folderUrl,
+      function(code) {
+        if (code == 0) {
+          document.dispatchEvent(createEvent("DOWNLOADER_unzipSuccess", [fileName]));
         } else {
-          document.dispatchEvent(createEvent("DOWNLOADER_fileCheckFailed", [md5sum, md5, fileName]));
+          document.dispatchEvent(createEvent("DOWNLOADER_unzipError", [fileName]));
         }
-      }, function(error) {
-        document.dispatchEvent(createEvent("DOWNLOADER_fileCheckError", [error]));
-      });
-    }, function onGetFileError(error) {
-      document.dispatchEvent(createEvent("DOWNLOADER_getFileError", [error]));
-    });
+      },
+      function(progressEvent) {
+        var percentage = Math.floor(progressEvent.loaded / progressEvent.total * 100);
+        document.dispatchEvent(createEvent("DOWNLOADER_unzipProgress", [percentage, fileName]));
+      }
+    );
   },
 
   /**
@@ -267,18 +257,26 @@ var Downloader = {
    */
   removeFile: function(fileName) {
     var folder = Downloader.localFolder;
-    folder.getFile(fileName, {
-      create: false,
-      exclusive: false
-    }, function onGotFileToRemove(entry) {
-      entry.remove(function onRemoved() {
-        document.dispatchEvent(createEvent("DOWNLOADER_fileRemoved", [entry]));
-      }, function onRemoveError() {
-        document.dispatchEvent(createEvent("DOWNLOADER_fileRemoveError", [entry]));
-      });
-    }, function onGetFileError(error) {
-      document.dispatchEvent(createEvent("DOWNLOADER_getFileError", [error]));
-    });
+    folder.getFile(
+      fileName,
+      {
+        create: false,
+        exclusive: false
+      },
+      function onGotFileToRemove(entry) {
+        entry.remove(
+          function onRemoved() {
+            document.dispatchEvent(createEvent("DOWNLOADER_fileRemoved", [entry]));
+          },
+          function onRemoveError() {
+            document.dispatchEvent(createEvent("DOWNLOADER_fileRemoveError", [entry]));
+          }
+        );
+      },
+      function onGetFileError(error) {
+        document.dispatchEvent(createEvent("DOWNLOADER_getFileError", [error]));
+      }
+    );
   },
 
   /*************************************************************** state */
@@ -447,50 +445,65 @@ var Downloader = {
   getFilesystem: function() {
     if (Downloader.fileSystemURL) {
       //console.log("Using fileSystemURL:" + Downloader.fileSystemURL);
-      window.resolveLocalFileSystemURI(Downloader.fileSystemURL, function(rootfolder) {
-        document.dispatchEvent(createEvent("DOWNLOADER_gotFileSystem", [rootfolder]));
-      }, function(error) {
-        document.dispatchEvent(createEvent("DOWNLOADER_error", [error]));
-      });
+      window.resolveLocalFileSystemURI(
+        Downloader.fileSystemURL,
+        function(rootfolder) {
+          document.dispatchEvent(createEvent("DOWNLOADER_gotFileSystem", [rootfolder]));
+        },
+        function(error) {
+          document.dispatchEvent(createEvent("DOWNLOADER_error", [error]));
+        }
+      );
     } else {
       //console.log("Fallback to Persistant Filesystem");
       window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
-      window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-        document.dispatchEvent(createEvent("DOWNLOADER_gotFileSystem", [fileSystem.root]));
-      }, function(error) {
-        document.dispatchEvent(createEvent("DOWNLOADER_error", [error]));
-      });
+      window.requestFileSystem(
+        LocalFileSystem.PERSISTENT,
+        0,
+        function(fileSystem) {
+          document.dispatchEvent(createEvent("DOWNLOADER_gotFileSystem", [fileSystem.root]));
+        },
+        function(error) {
+          document.dispatchEvent(createEvent("DOWNLOADER_error", [error]));
+        }
+      );
     }
   },
-
-
 
   /**
    * @param {cordova-plugin-file.File.FileSystem} fileSystem
    * @param {String} folderName
    */
   getFolder: function(fileSystem, folderName) {
-    fileSystem.getDirectory(folderName, {
-      create: true,
-      exclusive: false
-    }, function(folder) {
-      //console.log("getFolder->Success:" + folder.fullPath + " : " + folder.name);
-      document.dispatchEvent(createEvent("DOWNLOADER_gotFolder", [folder]));
-    }, function(error) {
-      //console.log("getFolder->Error");
-      document.dispatchEvent(createEvent("DOWNLOADER_error", [error]));
-    });
+    fileSystem.getDirectory(
+      folderName,
+      {
+        create: true,
+        exclusive: false
+      },
+      function(folder) {
+        //console.log("getFolder->Success:" + folder.fullPath + " : " + folder.name);
+        document.dispatchEvent(createEvent("DOWNLOADER_gotFolder", [folder]));
+      },
+      function(error) {
+        //console.log("getFolder->Error");
+        document.dispatchEvent(createEvent("DOWNLOADER_error", [error]));
+      }
+    );
   },
   touchNoMedia: function() {
     var folder = Downloader.localFolder;
-    folder.getFile(".nomedia", {
-      create: true,
-      exclusive: false
-    }, function onTouchNoMediaFile(entry) {
-
-    }, function onTouchNoMediaFileError(error) {
-      document.dispatchEvent(createEvent("DOWNLOADER_getFileError", [error]));
-    });
+    folder.getFile(
+      ".nomedia",
+      {
+        create: true,
+        exclusive: false
+      },
+      function onTouchNoMediaFile(entry) {},
+      function onTouchNoMediaFileError(error) {
+        document.dispatchEvent(createEvent("DOWNLOADER_getFileError", [error]));
+      }
+    );
   },
   /*************************************************************** EventHandler */
 
@@ -501,7 +514,6 @@ var Downloader = {
     var entry = /** @type {cordova-plugin-file.FileEntry} */ event.data[0];
     if (Downloader.isAutoCheck()) {
       var md5 = Downloader.fileObjectInProgress.md5;
-      Downloader.check(entry.name, md5);
     } else if (Downloader.isAutoUnzip() && Downloader.isZipFile(entry.name)) {
       Downloader.unzip(entry.name);
     }
@@ -526,7 +538,11 @@ var Downloader = {
       document.removeEventListener("DOWNLOADER_onDownloadError", Downloader.onDownloadError, false);
       document.removeEventListener("DOWNLOADER_gotFileSystem", Downloader.onGotFileSystem, false);
       document.removeEventListener("DOWNLOADER_gotFolder", Downloader.onGotFolder, false);
-      document.removeEventListener("DOWNLOADER_downloadSuccess", Downloader.onDownloadSuccess, false);
+      document.removeEventListener(
+        "DOWNLOADER_downloadSuccess",
+        Downloader.onDownloadSuccess,
+        false
+      );
       document.removeEventListener("DOWNLOADER_unzipSuccess", Downloader.onUnzipSuccess, false);
       document.removeEventListener("DOWNLOADER_fileCheckSuccess", Downloader.onCheckSuccess, false);
     }
@@ -589,7 +605,7 @@ var Downloader = {
   interface: {
     obj: null,
 
-      /**
+    /**
        * initializes the downloader
        * @param {Object} options
        *   - folder: sets folder to store downloads [required]
@@ -598,38 +614,38 @@ var Downloader = {
        *   - remove: true -> remove after unpack a zipfile [default: true]
        *   - wifiOnly: true -> only Download when connected to Wifi, else fire "DOWNLOADER_noWifiConnection" event [default: false]
        */
-      init: function(options) {
-        if (!options.folder) {
-          console.error("You have to set a folder to store the downloaded files into.");
-          return;
-        }
-        options = options || {};
-        Downloader.initialize(options);
-        Downloader.interface.obj = Downloader;
-      },
+    init: function(options) {
+      if (!options.folder) {
+        console.error("You have to set a folder to store the downloaded files into.");
+        return;
+      }
+      options = options || {};
+      Downloader.initialize(options);
+      Downloader.interface.obj = Downloader;
+    },
 
-      /**
+    /**
        * downlaods file at url and check md5sum if enabled
        * @param {String} url
        * @param {String} md5
        * 
        */
-      get: function(url, md5) {
-        /*if (!Downloader.isInitialized()){
+    get: function(url, md5) {
+      /*if (!Downloader.isInitialized()){
           console.error("You have to initialize Downloader first");
           return;
         }*/
-        if (!url) {
-          console.error("You have to specify a url where the file is located you wanna download");
-          return;
-        }
-        if (Downloader.isWifiOnly() && !Downloader.isWifiConnection()) {
-          document.dispatchEvent(createEvent("DOWNLOADER_noWifiConnection"));
-          return;
-        }
-        return Downloader.load(url, md5);
-      },
-      /**
+      if (!url) {
+        console.error("You have to specify a url where the file is located you wanna download");
+        return;
+      }
+      if (Downloader.isWifiOnly() && !Downloader.isWifiConnection()) {
+        document.dispatchEvent(createEvent("DOWNLOADER_noWifiConnection"));
+        return;
+      }
+      return Downloader.load(url, md5);
+    },
+    /**
        * downloads multiple Files in a row
        * DownloadObject:{
        *   url: sourceURL for download,
@@ -637,37 +653,37 @@ var Downloader = {
        * }
        * @param {Array.<DownloadObject>} list
        */
-      getMultipleFiles: function(list) {
-        if (Downloader.isWifiOnly() && !Downloader.isWifiConnection()) {
-          document.dispatchEvent(createEvent("DOWNLOADER_noWifiConnection"));
-          return;
-        }
-        for (var i = 0; i < list.length; i++) {
-          var fileObject = list[i];
-          Downloader.load(fileObject.url, fileObject.md5);
-        }
-      },
-      abort: function() {
-        Downloader.abort();
-      },
-      isInitialized: function() {
-        return Downloader.isInitialized();
-      },
-      setWifiOnly: function(wifionly) {
-        Downloader.setWifiOnly(wifionly);
-      },
-      setNoMedia: function(noMedia) {
-        Downloader.setNoMedia(noMedia);
-      },
-      setAutoUnzip: function(unzip) {
-        Downloader.setAutoUnzip(unzip);
-      },
-      setAutoCheck: function(check) {
-        Downloader.setAutoCheck(check);
-      },
-      setRemoveAfterUnzip: function(del) {
-        Downloader.setRemoveAfterUnzip(del);
+    getMultipleFiles: function(list) {
+      if (Downloader.isWifiOnly() && !Downloader.isWifiConnection()) {
+        document.dispatchEvent(createEvent("DOWNLOADER_noWifiConnection"));
+        return;
       }
+      for (var i = 0; i < list.length; i++) {
+        var fileObject = list[i];
+        Downloader.load(fileObject.url, fileObject.md5);
+      }
+    },
+    abort: function() {
+      Downloader.abort();
+    },
+    isInitialized: function() {
+      return Downloader.isInitialized();
+    },
+    setWifiOnly: function(wifionly) {
+      Downloader.setWifiOnly(wifionly);
+    },
+    setNoMedia: function(noMedia) {
+      Downloader.setNoMedia(noMedia);
+    },
+    setAutoUnzip: function(unzip) {
+      Downloader.setAutoUnzip(unzip);
+    },
+    setAutoCheck: function(check) {
+      Downloader.setAutoCheck(check);
+    },
+    setRemoveAfterUnzip: function(del) {
+      Downloader.setRemoveAfterUnzip(del);
+    }
   }
 };
 

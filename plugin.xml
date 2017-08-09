@@ -11,7 +11,7 @@
 	<dependency id="cordova-plugin-file-transfer" />
 	<dependency id="cordova-plugin-network-information"  />
 	<dependency id="cordova-plugin-zip" />
-	<dependency id="cordova-plugin-fastrde-md5" url="https://github.com/zwallacedev/cordova-plugin-fastrde-md5" />	
+	<dependency id="cordova-plugin-fastrde-md5" />	
 
 	<js-module src="www/downloader.min.js" name="downloader">
 		<clobbers target="downloader" />
